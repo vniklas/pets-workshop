@@ -9,5 +9,7 @@
         "devcontainers",
         "prebuild"
     ],
-    "github.copilot.nextEditSuggestions.enabled": true,    
+    "github.copilot.nextEditSuggestions.enabled": true,
+    "python.analysis.typeCheckingMode": "standard",
+    
 }
