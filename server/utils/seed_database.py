@@ -87,6 +87,42 @@ def create_dogs():
             for row in csv_reader:
                 dogs_data.append(row)
         
+        def find_breed_for_dog(dog_info, breeds):
+            """Try to find a matching breed based on the dog's description"""
+            description = dog_info['Description'].lower()
+            
+            # Check if any breed name is mentioned in the description
+            for breed in breeds:
+                breed_name = breed.name.lower()
+                # Check for exact breed name or common variations
+                if breed_name in description:
+                    return breed
+                
+                # Check for common breed keywords
+                breed_keywords = {
+                    'labrador': ['labrador', 'lab'],
+                    'retriever': ['retriever'],
+                    'bulldog': ['bulldog'],
+                    'poodle': ['poodle'],
+                    'shepherd': ['shepherd'],
+                    'husky': ['husky'],
+                    'beagle': ['beagle'],
+                    'corgi': ['corgi'],
+                    'boxer': ['boxer'],
+                    'chihuahua': ['chihuahua'],
+                    'schnauzer': ['schnauzer'],
+                    'terrier': ['terrier'],
+                    'labradoodle': ['labradoodle']
+                }
+                
+                for key, keywords in breed_keywords.items():
+                    if key in breed_name.lower():
+                        for keyword in keywords:
+                            if keyword in description:
+                                return breed
+            
+            return None
+
         def create_dog(dog_info, breed_id):
             """Helper function to create a dog with consistent attributes"""
             dog = Dog(
@@ -102,20 +138,24 @@ def create_dogs():
             breed_counts[breed_id] += 1
             return dog
         
-        # First pass: assign at least 3 dogs to each breed
+        # First pass: try to assign dogs to breeds based on their descriptions
+        remaining_dogs = []
+        for dog_info in dogs_data:
+            matched_breed = find_breed_for_dog(dog_info, breeds)
+            if matched_breed:
+                create_dog(dog_info, matched_breed.id)
+                print(f"Matched {dog_info['Name']} to {matched_breed.name} breed")
+            else:
+                remaining_dogs.append(dog_info)
+        
+        # Second pass: ensure each breed has at least 3 dogs by randomly assigning remaining dogs
         for breed in breeds:
-            # Get 3 random dogs that haven't been assigned yet
-            for _ in range(3):
-                if not dogs_data:
-                    break
-                
-                dog_info = random.choice(dogs_data)
-                dogs_data.remove(dog_info)
-                
+            while breed_counts[breed.id] < 3 and remaining_dogs:
+                dog_info = remaining_dogs.pop(0)
                 create_dog(dog_info, breed.id)
         
-        # Second pass: assign remaining dogs randomly
-        for dog_info in dogs_data:
+        # Third pass: assign any remaining dogs randomly
+        for dog_info in remaining_dogs:
             breed = random.choice(breeds)
             create_dog(dog_info, breed.id)
         
